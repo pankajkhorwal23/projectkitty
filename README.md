@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chibi Flight Countdown ✈️💕</title>
     <style>
         :root {
@@ -14,35 +15,50 @@
             --notepad-bg: #FFFDF3;
         }
 
-        /* Reset and enforce clean layout bounds to hide automatic page headers */
+        /* Forces any backend theme-injected header to hide completely */
+        header, .site-header, #projectkitty-header, [class*="header"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
         html, body {
             margin: 0 !important;
             padding: 0 !important;
             box-sizing: border-box;
             background-color: var(--bg-cream);
+            -webkit-text-size-adjust: 100%;
+            touch-action: manipulation;
         }
 
         body {
             font-family: 'Courier New', Courier, monospace;
             color: var(--text-color);
             overflow: hidden;
-            height: 100vh;
+            /* Uses Dynamic Viewport Height to prevent Safari mobile address bar clipping shifts */
+            height: 100dvh; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+            /* Protects content from slipping under the Dynamic Island or the home indicator */
+            padding-top: env(safe-area-inset-top, 20px);
+            padding-bottom: env(safe-area-inset-bottom, 10px);
         }
 
-        /* Main Stage View with fixed ceiling to override default server text layout */
+        /* Main Arena scaling tailored for vertical mobile layouts */
         .sky-arena {
             position: relative;
             width: 95%;
-            height: 50vh;
-            margin-top: 6vh;
+            height: 40vh;
+            margin-top: 10px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            padding-bottom: 20px;
+            padding-bottom: 10px;
             z-index: 5;
         }
 
@@ -56,28 +72,31 @@
         }
 
         .intro-text {
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             font-weight: bold;
-            margin: 5px 0;
+            margin: 3px 0;
+            padding: 0 10px;
         }
 
         .target-badge {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             opacity: 0.8;
         }
 
-        /* Characters and Anchors */
+        /* Responsive Character Containers scaled safely for the iPhone 15 frame */
         .actor-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 2;
-            width: 160px;
+            width: 28%; 
+            max-width: 120px;
         }
 
         .kitty-image {
-            width: 110px;
-            height: 110px;
+            width: 100%;
+            height: auto;
+            max-height: 85px;
             object-fit: contain;
             transition: filter 0.5s ease;
         }
@@ -87,11 +106,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
         }
 
         .airport-image {
-            width: 130px;
-            height: 130px;
+            width: 100%;
+            height: auto;
+            max-height: 100px;
             object-fit: contain;
         }
 
@@ -99,24 +120,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
+            width: 100%;
         }
 
         .airplane-image-waiting {
-            width: 100px;
-            height: 100px;
+            width: 90%;
+            height: auto;
+            max-height: 75px;
             object-fit: contain;
         }
 
         .status-pill {
             background: var(--pink-pastel);
-            padding: 4px 10px;
+            padding: 3px 6px;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: bold;
+            white-space: nowrap;
         }
 
-        /* SVG Flight Curve Canvas */
         .flight-svg-container {
             position: absolute;
             top: 0;
@@ -133,31 +156,31 @@
 
         #moving-plane {
             position: absolute;
-            width: 110px;
-            height: 110px;
+            width: 75px;
+            height: 75px;
             transform: translate(-50%, -50%);
             display: none;
             object-fit: contain;
             z-index: 5;
         }
 
-        /* Interactive Notepad Container */
+        /* Clean Mobile Notepad Container */
         .notepad-container {
-            width: 80%;
-            max-width: 450px;
+            width: 85%;
+            max-width: 400px;
             background: var(--notepad-bg);
             border: 2px solid #E8D3A7;
-            border-radius: 16px;
-            padding: 12px 16px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.03);
+            border-radius: 14px;
+            padding: 10px 14px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
             z-index: 10;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .notepad-header {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: flex;
             justify-content: space-between;
             opacity: 0.8;
@@ -165,21 +188,22 @@
 
         .notepad-textarea {
             width: 100%;
-            height: 60px;
+            height: 50px;
             background: transparent;
             border: none;
             resize: none;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-color);
             outline: none;
             padding: 0;
             box-sizing: border-box;
-            line-height: 1.4;
+            line-height: 1.3;
+            -webkit-appearance: none; /* Strips native iOS shadow overlays */
         }
 
         .word-counter {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
         }
 
@@ -188,24 +212,27 @@
             animation: shake 0.2s ease-in-out;
         }
 
-        /* Lower Center Countdown Structure */
+        /* Responsive Mobile Target Card */
         .countdown-container {
             text-align: center;
-            margin-bottom: 3vh;
+            margin-bottom: 15px;
             background: var(--card-bg);
-            padding: 15px 40px;
-            border-radius: 30px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.04);
-            border: 3px solid var(--pink-pastel);
-            min-width: 320px;
+            padding: 12px 25px;
+            border-radius: 24px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.04);
+            border: 2.5px solid var(--pink-pastel);
+            width: 80%;
+            max-width: 340px;
+            min-width: 280px;
             z-index: 10;
+            box-sizing: border-box;
         }
 
         .countdown-grid {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 8px;
         }
 
         .timer-unit {
@@ -215,63 +242,64 @@
         }
 
         .number-box {
-            font-size: 2.8rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-
-        .unit-label {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 4px;
-        }
-
-        .divider {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 22px;
-        }
-
-        .celebration-card h2 {
-            margin: 5px 0;
-            font-size: 1.5rem;
-            color: #D87093;
-        }
-
-        /* Interactive Time Machine Sandbox Drawer */
-        .time-machine-drawer {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            border-top: 2px dashed var(--pink-pastel);
-            padding: 10px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            z-index: 10;
-        }
-
-        .sandbox-label {
-            font-size: 0.8rem;
+            font-size: 2rem;
             font-weight: bold;
             letter-spacing: 1px;
         }
 
+        .unit-label {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .divider {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 14px;
+        }
+
+        .celebration-card h2 {
+            margin: 4px 0;
+            font-size: 1.25rem;
+            color: #D87093;
+        }
+
+        /* Compact Time Machine Sandbox Area for Mobile */
+        .time-machine-drawer {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            border-top: 1.5px dashed var(--pink-pastel);
+            padding: 8px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .sandbox-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
         .sandbox-controls {
             display: flex;
-            gap: 8px;
+            gap: 5px;
             flex-wrap: wrap;
             justify-content: center;
+            padding: 0 10px;
         }
 
         .sandbox-btn {
             background: white;
             border: 1px solid var(--text-color);
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 6px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
         .sandbox-btn.active {
@@ -279,10 +307,9 @@
             color: white;
         }
 
-        /* Dynamic Animations */
         @keyframes bounce {
             0%, 100% { transform: translateY(0) scale(1.05) scaleX(-1); }
-            50% { transform: translateY(-10px) scale(1.05) scaleX(-1); }
+            50% { transform: translateY(-6px) scale(1.05) scaleX(-1); }
         }
         .bouncing-kitty {
             animation: bounce 0.6s infinite ease-in-out;
@@ -290,8 +317,31 @@
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        /* Specific CSS adjustment fallback targeting desktop screen layout proportions */
+        @media (min-width: 600px) {
+            .sky-arena { height: 50vh; margin-top: 6vh; }
+            .intro-text { font-size: 1.2rem; }
+            .target-badge { font-size: 0.85rem; }
+            .actor-container { width: 160px; max-width: none; }
+            .kitty-image { max-height: 110px; }
+            .airport-image { max-height: 130px; }
+            .airplane-image-waiting { max-height: 100px; }
+            .status-pill { font-size: 0.75rem; padding: 4px 10px; }
+            #moving-plane { width: 110px; height: 110px; }
+            .notepad-container { padding: 12px 16px; margin-bottom: 15px; }
+            .notepad-header { font-size: 0.85rem; }
+            .notepad-textarea { height: 60px; font-size: 0.9rem; }
+            .countdown-container { padding: 15px 40px; border-radius: 30px; width: auto; max-width: none; }
+            .number-box { font-size: 2.8rem; }
+            .unit-label { font-size: 0.8rem; }
+            .divider { font-size: 2.5rem; margin-bottom: 22px; }
+            .time-machine-drawer { padding: 10px 0; gap: 8px; }
+            .sandbox-label { font-size: 0.8rem; }
+            .sandbox-btn { font-size: 0.75rem; padding: 4px 10px; }
         }
     </style>
 </head>
@@ -307,15 +357,15 @@
             <img id="female-kitty" class="kitty-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/48c8bfcc-972b-40af-b3ac-fb014035ac04.png" alt="Female Kitty" style="transform: scaleX(-1);">
             <div class="airport-wrapper">
                 <img class="airport-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/80de626a-f746-4cb9-9c68-add1b5583100.png" alt="Airport">
-                <div id="reunion-spot" style="position: absolute; top: 20px; display: none;">
-                    <img class="kitty-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/cd16e5f0-4f15-4014-80fa-0ae101cc4e1b.png" alt="Male Kitty Arrived" style="width: 70px; height: 70px;">
+                <div id="reunion-spot" style="position: absolute; top: 15px; display: none; width: 60%;">
+                    <img class="kitty-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/cd16e5f0-4f15-4014-80fa-0ae101cc4e1b.png" alt="Male Kitty Arrived">
                 </div>
             </div>
         </div>
 
         <div class="flight-svg-container">
             <svg class="flight-svg">
-                <path id="flightPath" d="" fill="none" stroke="var(--flight-path-color)" stroke-width="4" stroke-dasharray="8,10" stroke-linecap="round" />
+                <path id="flightPath" d="" fill="none" stroke="var(--flight-path-color)" stroke-width="3" stroke-dasharray="6,8" stroke-linecap="round" />
             </svg>
         </div>
         
@@ -371,7 +421,6 @@
         
         let currentMode = "real";
 
-        // Notepad Logic with Local Storage Persistence
         const noteInput = document.getElementById('note-input');
         const wordCountDisplay = document.getElementById('word-count-display');
 
@@ -422,7 +471,6 @@
             const isFlightMode = now >= DEPARTURE_TIME && now < ARRIVAL_TIME;
             const isLanded = now >= ARRIVAL_TIME;
 
-            // Happiness Calculations
             const maxSadWindow = 30 * 24 * 60 * 60 * 1000;
             let happiness = 1;
             if (timeToDeparture > 0) {
@@ -432,7 +480,6 @@
             const femaleKitty = document.getElementById('female-kitty');
             femaleKitty.style.filter = `grayscale(${Math.max(0, 1 - happiness)}) contrast(${0.9 + happiness * 0.1}) brightness(${0.95 + happiness * 0.05})`;
 
-            // UI Layout and View Toggles
             const statusText = document.getElementById('status-text');
             const maleKitty = document.getElementById('male-kitty');
             const staticPlaneBox = document.getElementById('static-plane-box');
@@ -462,12 +509,10 @@
                     staticPlaneBox.style.display = "none";
                     movingPlane.style.display = "block";
                     
-                    // Track path updates
                     const path = document.getElementById('flightPath');
                     const totalLength = path.getTotalLength();
                     const progress = (now - DEPARTURE_TIME) / (ARRIVAL_TIME - DEPARTURE_TIME);
                     
-                    // Trace Right to Left vector calculations
                     const pointLength = totalLength * (1 - progress);
                     const point = path.getPointAtLength(pointLength);
                     
@@ -482,7 +527,6 @@
                 }
             }
 
-            // Core Tracker Numerical Countdown Engine
             const totalSecondsRemaining = Math.max(0, Math.floor(timeToArrival / 1000));
             const d = Math.floor(totalSecondsRemaining / (24 * 3600));
             const h = Math.floor((totalSecondsRemaining % (24 * 3600)) / 3600);
@@ -501,13 +545,14 @@
             const w = arena.offsetWidth;
             const h = arena.offsetHeight;
 
-            // Generate absolute geometry vectors tracking Left and Right side dimensions
-            const startX = 140; 
-            const startY = h - 100;
-            const endX = w - 140; 
-            const endY = h - 100;
+            // Compute smart alignment coordinates to match mobile character widths
+            const offset = window.innerWidth < 600 ? w * 0.14 : 140;
+            const startX = offset; 
+            const startY = h - (window.innerWidth < 600 ? 50 : 100);
+            const endX = w - offset; 
+            const endY = startY;
             const controlX = w / 2;
-            const controlY = 40; 
+            const controlY = window.innerWidth < 600 ? 20 : 40; 
 
             path.setAttribute('d', `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`);
             updateSystem();
