@@ -1,3 +1,7 @@
+---
+layout: null
+---
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +18,6 @@
             --notepad-bg: #FFFDF3;
         }
 
-        /* Reset and enforce clean layout bounds to hide automatic page headers */
         html, body {
             margin: 0 !important;
             padding: 0 !important;
@@ -33,7 +36,6 @@
             align-items: center;
         }
 
-        /* Main Stage View with fixed ceiling to override default server text layout */
         .sky-arena {
             position: relative;
             width: 95%;
@@ -66,7 +68,6 @@
             opacity: 0.8;
         }
 
-        /* Characters and Anchors */
         .actor-container {
             display: flex;
             flex-direction: column;
@@ -116,7 +117,6 @@
             font-weight: bold;
         }
 
-        /* SVG Flight Curve Canvas */
         .flight-svg-container {
             position: absolute;
             top: 0;
@@ -141,7 +141,6 @@
             z-index: 5;
         }
 
-        /* Interactive Notepad Container */
         .notepad-container {
             width: 80%;
             max-width: 450px;
@@ -188,7 +187,6 @@
             animation: shake 0.2s ease-in-out;
         }
 
-        /* Lower Center Countdown Structure */
         .countdown-container {
             text-align: center;
             margin-bottom: 3vh;
@@ -238,7 +236,6 @@
             color: #D87093;
         }
 
-        /* Interactive Time Machine Sandbox Drawer */
         .time-machine-drawer {
             width: 100%;
             background: rgba(255, 255, 255, 0.7);
@@ -279,7 +276,6 @@
             color: white;
         }
 
-        /* Dynamic Animations */
         @keyframes bounce {
             0%, 100% { transform: translateY(0) scale(1.05) scaleX(-1); }
             50% { transform: translateY(-10px) scale(1.05) scaleX(-1); }
@@ -371,7 +367,6 @@
         
         let currentMode = "real";
 
-        // Notepad Logic with Local Storage Persistence
         const noteInput = document.getElementById('note-input');
         const wordCountDisplay = document.getElementById('word-count-display');
 
@@ -422,7 +417,6 @@
             const isFlightMode = now >= DEPARTURE_TIME && now < ARRIVAL_TIME;
             const isLanded = now >= ARRIVAL_TIME;
 
-            // Happiness Calculations
             const maxSadWindow = 30 * 24 * 60 * 60 * 1000;
             let happiness = 1;
             if (timeToDeparture > 0) {
@@ -432,7 +426,6 @@
             const femaleKitty = document.getElementById('female-kitty');
             femaleKitty.style.filter = `grayscale(${Math.max(0, 1 - happiness)}) contrast(${0.9 + happiness * 0.1}) brightness(${0.95 + happiness * 0.05})`;
 
-            // UI Layout and View Toggles
             const statusText = document.getElementById('status-text');
             const maleKitty = document.getElementById('male-kitty');
             const staticPlaneBox = document.getElementById('static-plane-box');
@@ -462,12 +455,10 @@
                     staticPlaneBox.style.display = "none";
                     movingPlane.style.display = "block";
                     
-                    // Track path updates
                     const path = document.getElementById('flightPath');
                     const totalLength = path.getTotalLength();
                     const progress = (now - DEPARTURE_TIME) / (ARRIVAL_TIME - DEPARTURE_TIME);
                     
-                    // Trace Right to Left vector calculations
                     const pointLength = totalLength * (1 - progress);
                     const point = path.getPointAtLength(pointLength);
                     
@@ -482,7 +473,6 @@
                 }
             }
 
-            // Core Tracker Numerical Countdown Engine
             const totalSecondsRemaining = Math.max(0, Math.floor(timeToArrival / 1000));
             const d = Math.floor(totalSecondsRemaining / (24 * 3600));
             const h = Math.floor((totalSecondsRemaining % (24 * 3600)) / 3600);
@@ -501,7 +491,6 @@
             const w = arena.offsetWidth;
             const h = arena.offsetHeight;
 
-            // Generate absolute geometry vectors tracking Left and Right side dimensions
             const startX = 140; 
             const startY = h - 100;
             const endX = w - 140; 
