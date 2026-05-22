@@ -14,11 +14,16 @@
             --notepad-bg: #FFFDF3;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace;
+        /* Reset and enforce clean layout bounds to hide automatic page headers */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box;
             background-color: var(--bg-cream);
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
             color: var(--text-color);
             overflow: hidden;
             height: 100vh;
@@ -28,16 +33,17 @@
             align-items: center;
         }
 
-        /* Main Stage View */
+        /* Main Stage View with fixed ceiling to override default server text layout */
         .sky-arena {
             position: relative;
             width: 95%;
             height: 50vh;
-            margin-top: 3vh;
+            margin-top: 6vh;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             padding-bottom: 20px;
+            z-index: 5;
         }
 
         .intro-banner {
@@ -369,7 +375,6 @@
         const noteInput = document.getElementById('note-input');
         const wordCountDisplay = document.getElementById('word-count-display');
 
-        // Load saved note if it exists
         if (localStorage.getItem('kitty_note')) {
             noteInput.value = localStorage.getItem('kitty_note');
             validateAndCountWords();
@@ -379,12 +384,10 @@
 
         function validateAndCountWords(e) {
             let text = noteInput.value;
-            // Split by spaces, filtering out empty entries
             let words = text.trim().split(/\s+/).filter(w => w.length > 0);
             let wordCount = words.length;
 
             if (wordCount > 50) {
-                // Slice text back to first 50 words
                 const dynamicRegex = new RegExp(`(?:\\s*\\S+\\s*){1,50}`);
                 const trimmedText = text.match(dynamicRegex);
                 noteInput.value = trimmedText ? trimmedText[0].trim() : text;
@@ -473,7 +476,7 @@
                     movingPlane.style.transform = "translate(-50%, -50%) scaleX(-1)";
                 } else {
                     statusText.textContent = "Counting down to when we're together... 💕";
-                    maleKitty.style.block = "block";
+                    maleKitty.style.display = "block";
                     staticPlaneBox.style.display = "flex";
                     movingPlane.style.display = "none";
                 }
