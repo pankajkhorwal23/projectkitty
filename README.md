@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,6 +12,7 @@
             --text-color: #6D5959;
             --flight-path-color: #B19FFB;
             --card-bg: rgba(255, 255, 255, 0.9);
+            --notepad-bg: #FFFDF3;
         }
 
         body {
@@ -27,45 +29,12 @@
             align-items: center;
         }
 
-        /* Header Layout */
-        header {
-            width: 90%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            z-index: 10;
-        }
-
-        .title-area {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .mute-btn {
-            background: white;
-            border: 2px solid var(--pink-pastel);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: inherit;
-            color: var(--text-color);
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-
-        .mute-btn:active {
-            transform: scale(0.95);
-        }
-
         /* Main Stage View */
         .sky-arena {
             position: relative;
             width: 95%;
-            height: 55vh;
+            height: 50vh;
+            margin-top: 3vh;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
@@ -167,12 +136,59 @@
             z-index: 5;
         }
 
+        /* Interactive Notepad Container */
+        .notepad-container {
+            width: 80%;
+            max-width: 450px;
+            background: var(--notepad-bg);
+            border: 2px solid #E8D3A7;
+            border-radius: 16px;
+            padding: 12px 16px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.03);
+            z-index: 10;
+            margin-bottom: 15px;
+        }
+
+        .notepad-header {
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            opacity: 0.8;
+        }
+
+        .notepad-textarea {
+            width: 100%;
+            height: 60px;
+            background: transparent;
+            border: none;
+            resize: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            outline: none;
+            padding: 0;
+            box-sizing: border-box;
+            line-height: 1.4;
+        }
+
+        .word-counter {
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .word-limit-reached {
+            color: #FF6B6B;
+            animation: shake 0.2s ease-in-out;
+        }
+
         /* Lower Center Countdown Structure */
         .countdown-container {
             text-align: center;
-            margin-bottom: 5vh;
+            margin-bottom: 3vh;
             background: var(--card-bg);
-            padding: 20px 40px;
+            padding: 15px 40px;
             border-radius: 30px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.04);
             border: 3px solid var(--pink-pastel);
@@ -266,17 +282,15 @@
         .bouncing-kitty {
             animation: bounce 0.6s infinite ease-in-out;
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="title-area">
-            <span>💕</span>
-            <span>Flight Tracker</span>
-        </div>
-        <button class="mute-btn" id="mute-trigger">Muted 🔇</button>
-    </header>
 
     <main class="sky-arena" id="arena">
         <div class="intro-banner">
@@ -311,6 +325,14 @@
         </div>
     </main>
 
+    <div class="notepad-container">
+        <div class="notepad-header">
+            <span>📝 Leave a Note:</span>
+            <span class="word-counter" id="word-count-display">0 / 50 words</span>
+        </div>
+        <textarea class="notepad-textarea" id="note-input" placeholder="Type a sweet message here..."></textarea>
+    </div>
+
     <div class="countdown-container" id="countdown-board">
         <div class="countdown-grid" id="timer-grid">
             <div class="timer-unit"><div class="number-box" id="d-val">00</div><span class="unit-label">Days</span></div>
@@ -343,34 +365,39 @@
         const ARRIVAL_TIME = new Date("2026-05-27T09:00:00").getTime();
         
         let currentMode = "real";
-        let isMuted = true;
-        let audioCtx = null;
 
-        // Sound Engine Execution
-        document.getElementById('mute-trigger').addEventListener('click', function() {
-            isMuted = !isMuted;
-            this.textContent = isMuted ? "Muted 🔇" : "Soft Tick 🔊";
-            if (!isMuted && !audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Notepad Logic with Local Storage Persistence
+        const noteInput = document.getElementById('note-input');
+        const wordCountDisplay = document.getElementById('word-count-display');
+
+        // Load saved note if it exists
+        if (localStorage.getItem('kitty_note')) {
+            noteInput.value = localStorage.getItem('kitty_note');
+            validateAndCountWords();
+        }
+
+        noteInput.addEventListener('input', validateAndCountWords);
+
+        function validateAndCountWords(e) {
+            let text = noteInput.value;
+            // Split by spaces, filtering out empty entries
+            let words = text.trim().split(/\s+/).filter(w => w.length > 0);
+            let wordCount = words.length;
+
+            if (wordCount > 50) {
+                // Slice text back to first 50 words
+                const dynamicRegex = new RegExp(`(?:\\s*\\S+\\s*){1,50}`);
+                const trimmedText = text.match(dynamicRegex);
+                noteInput.value = trimmedText ? trimmedText[0].trim() : text;
+                words = noteInput.value.trim().split(/\s+/).filter(w => w.length > 0);
+                wordCount = words.length;
+                wordCountDisplay.classList.add('word-limit-reached');
+            } else {
+                wordCountDisplay.classList.remove('word-limit-reached');
             }
-        });
 
-        function playTick() {
-            if (isMuted || !audioCtx) return;
-            try {
-                if (audioCtx.state === "suspended") audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = "triangle";
-                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
-                gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.05);
-            } catch (e) { console.warn(e); }
+            wordCountDisplay.textContent = `${wordCount} / 50 words`;
+            localStorage.setItem('kitty_note', noteInput.value);
         }
 
         function switchMode(mode, btn) {
@@ -447,7 +474,7 @@
                     movingPlane.style.transform = "translate(-50%, -50%) scaleX(-1)";
                 } else {
                     statusText.textContent = "Counting down to when we're together... 💕";
-                    maleKitty.style.display = "block";
+                    maleKitty.style.block = "block";
                     staticPlaneBox.style.display = "flex";
                     movingPlane.style.display = "none";
                 }
@@ -464,8 +491,6 @@
             document.getElementById('h-val').textContent = String(h).padStart(2, "0");
             document.getElementById('m-val').textContent = String(m).padStart(2, "0");
             document.getElementById('s-val').textContent = String(s).padStart(2, "0");
-            
-            playTick();
         }
 
         function buildArc() {
