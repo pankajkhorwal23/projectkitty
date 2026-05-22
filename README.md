@@ -11,7 +11,6 @@
             --text-color: #6D5959;
             --flight-path-color: #B19FFB;
             --card-bg: rgba(255, 255, 255, 0.9);
-            --notepad-bg: #FFFDF3;
         }
 
         header, .site-header, #projectkitty-header, [class*="header"] {
@@ -48,7 +47,7 @@
         .sky-arena {
             position: relative;
             width: 95%;
-            height: 38vh;
+            height: 45vh;
             margin-top: 10px;
             display: flex;
             justify-content: space-between;
@@ -158,102 +157,11 @@
             z-index: 5;
         }
 
-        .notepad-container {
-            width: 85%;
-            max-width: 400px;
-            background: var(--notepad-bg);
-            border: 2px solid #E8D3A7;
-            border-radius: 14px;
-            padding: 10px 14px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            z-index: 10;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .notepad-header {
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            opacity: 0.8;
-        }
-
-        .notepad-display {
-            width: 100%;
-            height: 65px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px dashed #E8D3A7;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.8rem;
-            color: var(--text-color);
-            padding: 6px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            line-height: 1.3;
-        }
-
-        .notepad-input-row {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .notepad-textarea {
-            flex: 1;
-            height: 32px;
-            background: white;
-            border: 1px solid #E8D3A7;
-            border-radius: 8px;
-            resize: none;
-            font-family: inherit;
-            font-size: 0.8rem;
-            color: var(--text-color);
-            outline: none;
-            padding: 6px;
-            box-sizing: border-box;
-            line-height: 1.2;
-            -webkit-appearance: none;
-        }
-
-        .save-btn {
-            background: var(--pink-pastel);
-            border: 1px solid #E8D3A7;
-            color: var(--text-color);
-            font-family: inherit;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 0 12px;
-            height: 32px;
-            border-radius: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.2s ease;
-        }
-
-        .save-btn:active {
-            background: #f7bdcb;
-        }
-
-        .word-counter {
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-
-        .word-limit-reached {
-            color: #FF6B6B;
-            animation: shake 0.2s ease-in-out;
-        }
-
         .countdown-container {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 25px;
             background: var(--card-bg);
-            padding: 10px 25px;
+            padding: 15px 25px;
             border-radius: 24px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.04);
             border: 2.5px solid var(--pink-pastel);
@@ -342,8 +250,16 @@
             color: white;
         }
 
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1.05) scaleX(-1); }
+            50% { transform: translateY(-6px) scale(1.05) scaleX(-1); }
+        }
+        .bouncing-kitty {
+            animation: bounce 0.6s infinite ease-in-out;
+        }
+
         @media (min-width: 600px) {
-            .sky-arena { height: 50vh; margin-top: 6vh; }
+            .sky-arena { height: 52vh; margin-top: 6vh; }
             .intro-text { font-size: 1.2rem; }
             .target-badge { font-size: 0.85rem; }
             .actor-container { width: 160px; max-width: none; }
@@ -352,12 +268,7 @@
             .airplane-image-waiting { max-height: 100px; }
             .status-pill { font-size: 0.75rem; padding: 4px 10px; }
             #moving-plane { width: 110px; height: 110px; }
-            .notepad-container { padding: 12px 16px; margin-bottom: 15px; gap: 8px; }
-            .notepad-header { font-size: 0.85rem; }
-            .notepad-display { height: 100px; font-size: 0.85rem; }
-            .notepad-textarea { height: 40px; font-size: 0.85rem; }
-            .save-btn { height: 40px; font-size: 0.8rem; }
-            .countdown-container { padding: 15px 40px; border-radius: 30px; width: auto; max-width: none; }
+            .countdown-container { padding: 20px 40px; border-radius: 30px; width: auto; max-width: none; margin-bottom: 35px; }
             .number-box { font-size: 2.8rem; }
             .unit-label { font-size: 0.8rem; }
             .divider { font-size: 2.5rem; margin-bottom: 22px; }
@@ -399,20 +310,6 @@
         </div>
     </main>
 
-    <div class="notepad-container">
-        <div class="notepad-header">
-            <span>📝 Shared Message Stream:</span>
-            <span class="word-counter" id="word-count-display">0 / 50 words</span>
-        </div>
-        
-        <div class="notepad-display" id="notes-stream-board">Loading shared notes...</div>
-        
-        <div class="notepad-input-row">
-            <textarea class="notepad-textarea" id="note-input" placeholder="Type a message..."></textarea>
-            <button class="save-btn" onclick="appendNewNote()">Save Note</button>
-        </div>
-    </div>
-
     <div class="countdown-container" id="countdown-board">
         <div class="countdown-grid" id="timer-grid">
             <div class="timer-unit"><div class="number-box" id="d-val">00</div><span class="unit-label">Days</span></div>
@@ -443,104 +340,7 @@
     <script>
         const DEPARTURE_TIME = new Date("2026-05-27T06:10:00").getTime();
         const ARRIVAL_TIME = new Date("2026-05-27T09:00:00").getTime();
-        
-        // Changed bucket endpoint to fully isolate corrected JSON structures
-        const API_URL = "https://keyv.be/projectkitty_stream_json";
         let currentMode = "real";
-
-        const noteInput = document.getElementById('note-input');
-        const streamBoard = document.getElementById('notes-stream-board');
-        const wordCountDisplay = document.getElementById('word-count-display');
-
-        async function loadCloudNotes() {
-            try {
-                const response = await fetch(API_URL);
-                if (response.ok) {
-                    const dataText = await response.text();
-                    if (dataText && dataText !== "Key not found") {
-                        try {
-                            const parsed = JSON.parse(dataText);
-                            if (parsed && parsed.notes) {
-                                streamBoard.textContent = parsed.notes;
-                                streamBoard.scrollTop = streamBoard.scrollHeight;
-                                return;
-                            }
-                        } catch(e) {
-                            // Backup handling if raw content slips through
-                            if(dataText.trim().length > 0) {
-                                streamBoard.textContent = dataText;
-                                return;
-                            }
-                        }
-                    }
-                }
-                if (streamBoard.textContent === "Loading shared notes...") {
-                    streamBoard.textContent = "No messages left yet. Send a sweet note! 💕";
-                }
-            } catch (err) {
-                console.log("Error loading cloud notes:", err);
-            }
-        }
-
-        async function appendNewNote() {
-            let text = noteInput.value.trim();
-            if (!text) return;
-
-            try {
-                let currentCloudText = "";
-                const response = await fetch(API_URL);
-                if (response.ok) {
-                    const fetchedText = await response.text();
-                    if (fetchedText && fetchedText !== "Key not found") {
-                        try {
-                            const parsed = JSON.parse(fetchedText);
-                            if (parsed && parsed.notes) {
-                                currentCloudText = parsed.notes + "\n\n";
-                            }
-                        } catch(e) {
-                            currentCloudText = fetchedText + "\n\n";
-                        }
-                    }
-                }
-
-                const updatedNotes = currentCloudText + `> ${text}`;
-                const payload = { notes: updatedNotes };
-
-                // Delivering properly formatted JSON stringifies special text characters seamlessly
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                noteInput.value = "";
-                wordCountDisplay.textContent = "0 / 50 words";
-                loadCloudNotes();
-            } catch (err) {
-                console.log("Error appending note entry:", err);
-            }
-        }
-
-        noteInput.addEventListener('input', validateLocalInputLength);
-
-        function validateLocalInputLength() {
-            let text = noteInput.value;
-            let words = text.trim().split(/\s+/).filter(w => w.length > 0);
-            let wordCount = words.length;
-
-            if (wordCount > 50) {
-                const dynamicRegex = new RegExp(`(?:\\s*\\S+\\s*){1,50}`);
-                const trimmedText = text.match(dynamicRegex);
-                noteInput.value = trimmedText ? trimmedText[0].trim() : text;
-                words = noteInput.value.trim().split(/\s+/).filter(w => w.length > 0);
-                wordCount = words.length;
-                wordCountDisplay.classList.add('word-limit-reached');
-            } else {
-                wordCountDisplay.classList.remove('word-limit-reached');
-            }
-
-            wordCountDisplay.textContent = `${wordCount} / 50 words`;
-        }
 
         function switchMode(mode, btn) {
             currentMode = mode;
@@ -650,9 +450,7 @@
 
         window.addEventListener('resize', buildArc);
         buildArc();
-        loadCloudNotes(); 
         
-        setInterval(loadCloudNotes, 4000); // Polling frequency optimized to 4 seconds for faster cross-device visual syncing
         setInterval(updateSystem, 1000);
     </script>
 </body>
