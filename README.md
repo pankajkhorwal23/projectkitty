@@ -1,421 +1,495 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Helmet } from "react-helmet";
-import { Volume2, VolumeX, Sparkles, Heart, Play, RefreshCw, Calendar, Moon, Sun } from "lucide-react";
-import { Button } from "../components/Button";
-import { ThemeModeSwitch } from "../components/ThemeModeSwitch";
-import styles from "./_index.module.css";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chibi Flight Countdown ✈️💕</title>
+    <style>
+        :root {
+            --pink-pastel: #FFD1DC;
+            --blue-pastel: #AEC6CF;
+            --bg-cream: #FFFDD0;
+            --text-color: #6D5959;
+            --flight-path-color: #B19FFB;
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
 
-// Key Timestamps (May 27, 2026)
-const DEPARTURE_TIME = new Date("2026-05-27T06:10:00");
-const ARRIVAL_TIME = new Date("2026-05-27T09:00:00");
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-cream);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-// Sound engine (Web Audio API helper)
-let audioCtx: AudioContext | null = null;
-const playTick = () => {
-  try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-    
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    // Whimsical mechanical soft tick sound
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
-    
-    gainNode.gain.setValueAtTime(0.015, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
-    
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.05);
-  } catch (e) {
-    console.warn("AudioContext error:", e);
-  }
-};
+        /* Header Layout */
+        header {
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            z-index: 10;
+        }
 
-export default function LandingPage() {
-  // Time Machine states for testing the countdown timeline easily
-  type TimeMode = "real" | "waiting_sad" | "waiting_happy" | "flight" | "landed";
-  const [timeMode, setTimeMode] = useState<TimeMode>("real");
-  const [customTimeOffset, setCustomTimeOffset] = useState<number>(0);
-  
-  const [now, setNow] = useState<Date>(new Date());
-  const [isMuted, setIsMuted] = useState<boolean>(true);
-  
-  // Floating decorative items (Hearts/Stars)
-  const [decorations, setDecorations] = useState<Array<{ id: number; left: number; top: number; size: number; delay: number; type: "heart" | "star" }>>([]);
+        .title-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
 
-  // For flight path animation calculation
-  const pathRef = useRef<SVGPathElement>(null);
-  const [planePos, setPlanePos] = useState({ x: 900, y: 350, angle: -15 });
-  const [pathLength, setPathLength] = useState(0);
+        .mute-btn {
+            background: white;
+            border: 2px solid var(--pink-pastel);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--text-color);
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
 
-  // Measure path length when SVG mounts/resizes
-  useEffect(() => {
-    if (pathRef.current) {
-      setPathLength(pathRef.current.getTotalLength());
-    }
-  }, [pathRef]);
+        .mute-btn:active {
+            transform: scale(0.95);
+        }
 
-  // Handle ticking interval & time calculation
-  useEffect(() => {
-    const timer = setInterval(() => {
-      let currentSimulatedTime = new Date();
-      
-      if (timeMode === "waiting_sad") {
-        // Set to 28 days before departure
-        currentSimulatedTime = new Date(DEPARTURE_TIME.getTime() - 28 * 24 * 60 * 60 * 1000);
-      } else if (timeMode === "waiting_happy") {
-        // Set to 1 hour before departure
-        currentSimulatedTime = new Date(DEPARTURE_TIME.getTime() - 1 * 60 * 60 * 1000);
-      } else if (timeMode === "flight") {
-        // Set to mid-flight (1.5 hours after departure)
-        currentSimulatedTime = new Date(DEPARTURE_TIME.getTime() + 1.5 * 60 * 60 * 1000);
-      } else if (timeMode === "landed") {
-        // Set to target time
-        currentSimulatedTime = new Date(ARRIVAL_TIME.getTime() + 1000);
-      }
-      
-      setNow(currentSimulatedTime);
+        /* Main Stage View */
+        .sky-arena {
+            position: relative;
+            width: 95%;
+            height: 55vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 20px;
+        }
 
-      if (!isMuted) {
-        playTick();
-      }
-    }, 1000);
+        .intro-banner {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+        }
 
-    return () => clearInterval(timer);
-  }, [timeMode, isMuted]);
+        .intro-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
 
-  // Generate dynamic decorative floats
-  useEffect(() => {
-    const items = Array.from({ length: 15 }).map((_, i) => ({
-      id: i,
-      left: Math.random() * 90,
-      top: 60 + Math.random() * 30,
-      size: 15 + Math.random() * 20,
-      delay: Math.random() * 8,
-      type: Math.random() > 0.5 ? ("heart" as const) : ("star" as const)
-    }));
-    setDecorations(items);
-  }, []);
+        .target-badge {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
 
-  // Compute key time state progress
-  const timeToDeparture = DEPARTURE_TIME.getTime() - now.getTime();
-  const timeToArrival = ARRIVAL_TIME.getTime() - now.getTime();
+        /* Characters and Anchors */
+        .actor-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            width: 160px;
+        }
 
-  const isFlightMode = now >= DEPARTURE_TIME && now < ARRIVAL_TIME;
-  const isLanded = now >= ARRIVAL_TIME;
+        .kitty-image {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            transition: filter 0.5s ease;
+        }
 
-  // Calculate happiness factor (0 to 1)
-  // We starts getting happy 30 days before departure
-  const maxSadWindow = 30 * 24 * 60 * 60 * 1000;
-  let happiness = 1; 
-  if (timeToDeparture > 0) {
-    if (timeToDeparture >= maxSadWindow) {
-      happiness = 0;
-    } else {
-      happiness = 1 - (timeToDeparture / maxSadWindow);
-    }
-  } else {
-    happiness = 1;
-  }
+        .airport-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-  // Animate the airplane on path
-  useEffect(() => {
-    if (isFlightMode && pathRef.current && pathLength > 0) {
-      const totalFlightDuration = ARRIVAL_TIME.getTime() - DEPARTURE_TIME.getTime();
-      const elapsed = now.getTime() - DEPARTURE_TIME.getTime();
-      const progress = Math.min(1, Math.max(0, elapsed / totalFlightDuration));
-      
-      // Calculate coordinates from right to left
-      // progress = 0: Plane is on the right side
-      // progress = 1: Plane is on the left side
-      // Our path starts on left (Airport) and goes to right (Departure). So progress goes from 1 to 0 on path
-      const pathProgress = 1 - progress;
-      const point = pathRef.current.getPointAtLength(pathProgress * pathLength);
-      
-      // Calculate tangent angle for rotation
-      const delta = 2;
-      const progressAhead = Math.max(0, pathProgress - delta / pathLength);
-      const pointAhead = pathRef.current.getPointAtLength(progressAhead * pathLength);
-      const angle = Math.atan2(pointAhead.y - point.y, pointAhead.x - point.x) * (180 / Math.PI);
+        .airport-image {
+            width: 130px;
+            height: 130px;
+            object-fit: contain;
+        }
 
-      setPlanePos({ x: point.x, y: point.y, angle: angle + 180 }); // flip to face left direction
-    }
-  }, [now, isFlightMode, pathLength]);
+        .waiting-airplane {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
 
-  // Countdown calculations
-  const totalSecondsRemaining = Math.max(0, Math.floor(timeToArrival / 1000));
-  const days = Math.floor(totalSecondsRemaining / (24 * 3600));
-  const hours = Math.floor((totalSecondsRemaining % (24 * 3600)) / 3600);
-  const minutes = Math.floor((totalSecondsRemaining % 3600) / 60);
-  const seconds = totalSecondsRemaining % 60;
+        .airplane-image-waiting {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
 
-  return (
-    <div className={styles.appContainer}>
-      <Helmet>
-        <title>Chibi Flight Countdown ✈️💕</title>
-        <meta name="description" content="A gorgeous storybook-themed countdown till meeting time!" />
-      </Helmet>
+        .status-pill {
+            background: var(--pink-pastel);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
 
-      {/* Decorative Floating Hearts & Stars */}
-      <div className={styles.decorationLayer}>
-        {decorations.map((dec) => (
-          <div
-            key={dec.id}
-            className={`${styles.floatingDec} ${dec.type === "heart" ? styles.heart : styles.star}`}
-            style={{
-              left: `${dec.left}%`,
-              top: `${dec.top}%`,
-              width: `${dec.size}px`,
-              height: `${dec.size}px`,
-              animationDelay: `${dec.delay}s`,
-              opacity: isLanded ? 0.9 : 0.4
-            }}
-          >
-            {dec.type === "heart" ? <Heart fill="currentColor" /> : <Sparkles />}
-          </div>
-        ))}
-      </div>
+        /* SVG Flight Curve Canvas */
+        .flight-svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
 
-      {/* Header section with Theme switch & Cute Mute Toggle */}
-      <header className={styles.header}>
-        <div className={styles.titleArea}>
-          <span className={styles.heartPulse}>💕</span>
-          <h1 className={styles.appTitle}>Flight Tracker</h1>
+        .flight-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        #moving-plane {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            transform: translate(-50%, -50%);
+            display: none;
+            object-fit: contain;
+            z-index: 5;
+        }
+
+        /* Lower Center Countdown Structure */
+        .countdown-container {
+            text-align: center;
+            margin-bottom: 5vh;
+            background: var(--card-bg);
+            padding: 20px 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+            border: 3px solid var(--pink-pastel);
+            min-width: 320px;
+            z-index: 10;
+        }
+
+        .countdown-grid {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .number-box {
+            font-size: 2.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .unit-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .divider {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 22px;
+        }
+
+        .celebration-card h2 {
+            margin: 5px 0;
+            font-size: 1.5rem;
+            color: #D87093;
+        }
+
+        /* Interactive Time Machine Sandbox Drawer */
+        .time-machine-drawer {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            border-top: 2px dashed var(--pink-pastel);
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .sandbox-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .sandbox-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sandbox-btn {
+            background: white;
+            border: 1px solid var(--text-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.75rem;
+        }
+
+        .sandbox-btn.active {
+            background: var(--text-color);
+            color: white;
+        }
+
+        /* Dynamic Animations */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1.05) scaleX(-1); }
+            50% { transform: translateY(-10px) scale(1.05) scaleX(-1); }
+        }
+        .bouncing-kitty {
+            animation: bounce 0.6s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-area">
+            <span>💕</span>
+            <span>Flight Tracker</span>
+        </div>
+        <button class="mute-btn" id="mute-trigger">Muted 🔇</button>
+    </header>
+
+    <main class="sky-arena" id="arena">
+        <div class="intro-banner">
+            <p class="intro-text" id="status-text">Counting down to when we're together... 💕</p>
+            <div class="target-badge">📅 Target Arrival: May 27, 2026 at 9:00 AM</div>
+        </div>
+
+        <div class="actor-container" style="margin-left: 2%;">
+            <img id="female-kitty" class="kitty-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/48c8bfcc-972b-40af-b3ac-fb014035ac04.png" alt="Female Kitty" style="transform: scaleX(-1);">
+            <div class="airport-wrapper">
+                <img class="airport-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/80de626a-f746-4cb9-9c68-add1b5583100.png" alt="Airport">
+                <div id="reunion-spot" style="position: absolute; top: 20px; display: none;">
+                    <img class="kitty-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/cd16e5f0-4f15-4014-80fa-0ae101cc4e1b.png" alt="Male Kitty Arrived" style="width: 70px; height: 70px;">
+                </div>
+            </div>
+        </div>
+
+        <div class="flight-svg-container">
+            <svg class="flight-svg">
+                <path id="flightPath" d="" fill="none" stroke="var(--flight-path-color)" stroke-width="4" stroke-dasharray="8,10" stroke-linecap="round" />
+            </svg>
         </div>
         
-        <div className={styles.controlHeader}>
-          <Button
-            variant="outline"
-            className={`${styles.muteButton} ${!isMuted ? styles.pulseBorder : ""}`}
-            onClick={() => {
-              setIsMuted(!isMuted);
-              if (isMuted) {
-                // play a trigger tick to start Audio Context
-                playTick();
-              }
-            }}
-          >
-            {isMuted ? (
-              <>
-                <VolumeX size={16} />
-                <span>Muted</span>
-              </>
-            ) : (
-              <>
-                <Volume2 size={16} className={styles.audioWave} />
-                <span>Soft Tick</span>
-              </>
-            )}
-          </Button>
+        <img id="moving-plane" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/9f999e37-1eab-41cd-a3f8-5a1811b2a909.png" alt="Flying Airplane">
 
-          <ThemeModeSwitch />
-        </div>
-      </header>
-
-      {/* Main interactive sky view */}
-      <main className={styles.skyArena}>
-        {/* Sky banner subtitle */}
-        <div className={styles.introBanner}>
-          <p className={styles.introText}>
-            {isLanded 
-              ? "The wait is over! Together at last! 💕" 
-              : isFlightMode 
-                ? "He is in the air right now! ✈️ Heading home..." 
-                : "Counting down to when we're together... 💕"
-            }
-          </p>
-          <div className={styles.targetBadge}>
-            <Calendar size={14} />
-            <span>Target Arrival: May 27, 2026 at 9:00 AM</span>
-          </div>
-        </div>
-
-        <div className={styles.mainTrack}>
-          {/* LEFT SIDE: Female Kitty + Airport */}
-          <div className={styles.actorContainerLeft}>
-            <div className={styles.kittyWrapper}>
-              <img
-                src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/48c8bfcc-972b-40af-b3ac-fb014035ac04.png"
-                alt="Female Kitty"
-                className={`${styles.kittyImage} ${isLanded ? styles.bouncingKitty : ""}`}
-                style={{
-                  filter: `grayscale(${Math.max(0, 1 - happiness)}) contrast(${0.9 + happiness * 0.1}) brightness(${0.95 + happiness * 0.05})`,
-                  transform: isLanded ? "scale(1.1) scaleX(-1)" : "scaleX(-1)"
-                }}
-              />
+        <div class="actor-container" id="right-hangar" style="margin-right: 2%;">
+            <img id="male-kitty" class="kitty-image" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/cd16e5f0-4f15-4014-80fa-0ae101cc4e1b.png" alt="Male Kitty">
+            <div class="waiting-airplane" id="static-plane-box">
+                <img class="airplane-image-waiting" src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/9f999e37-1eab-41cd-a3f8-5a1811b2a909.png" alt="Grounded Airplane">
+                <div class="status-pill">Boarding Soon</div>
             </div>
-
-            <div className={styles.airportWrapper}>
-              <img
-                src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/80de626a-f746-4cb9-9c68-add1b5583100.png"
-                alt="Airport Terminal"
-                className={styles.airportImage}
-              />
-              {isLanded && (
-                <div className={styles.arrivedGroup}>
-                  <img
-                    src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/cd16e5f0-4f15-4014-80fa-0ae101cc4e1b.png"
-                    alt="Male Kitty Arrived"
-                    className={`${styles.kittyImageSmall} ${styles.wiggleCelebration}`}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* SVG Flight Path Layer */}
-          <div className={styles.flightSvgContainer}>
-            <svg viewBox="0 0 1000 400" className={styles.flightSvg}>
-              {/* Curved dotted line in the sky */}
-              <path
-                ref={pathRef}
-                id="flightPath"
-                d="M 160 310 Q 500 40 840 310"
-                fill="none"
-                stroke="var(--flight-path-color)"
-                strokeWidth="4"
-                strokeDasharray="8,10"
-                strokeLinecap="round"
-              />
-
-              {/* Airplane Animation along path */}
-              {isFlightMode && (
-                <g transform={`translate(${planePos.x}, ${planePos.y}) rotate(${planePos.angle})`}>
-                  <image
-                    href="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/9f999e37-1eab-41cd-a3f8-5a1811b2a909.png"
-                    x="-60"
-                    y="-60"
-                    width="120"
-                    height="120"
-                    className={styles.airplaneFlying}
-                  />
-                </g>
-              )}
-            </svg>
-          </div>
-
-          {/* RIGHT SIDE: Male Kitty + Plane (Waiting State) */}
-          <div className={styles.actorContainerRight}>
-            {!isLanded && (
-              <>
-                {/* Male Kitty - fades out into the airplane in flight mode */}
-                <div className={`${styles.kittyWrapper} ${isFlightMode ? styles.fadeDeparted : ""}`}>
-                  <img
-                    src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/cd16e5f0-4f15-4014-80fa-0ae101cc4e1b.png"
-                    alt="Male Kitty"
-                    className={`${styles.kittyImage}`}
-                  />
-                </div>
-
-                {/* Airplane waiting on right before departure */}
-                {!isFlightMode && (
-                  <div className={styles.waitingAirplane}>
-                    <img
-                      src="https://assets.floot.app/307326dd-6ce5-42b7-86bf-e8cad4d22c41/9f999e37-1eab-41cd-a3f8-5a1811b2a909.png"
-                      alt="Waiting Airplane"
-                      className={styles.airplaneImageWaiting}
-                    />
-                    <div className={styles.statusPill}>Boarding Soon</div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
+    </main>
 
-        {/* Massive Countdown Panel (Grounded center/lower) */}
-        <div className={styles.countdownContainer}>
-          {isLanded ? (
-            <div className={styles.celebrationCard}>
-              <div className={styles.celebrationBanner}>
-                <Sparkles className={styles.spinIcon} />
-                <h2>✨ He's Here! We are Together! ✨</h2>
-                <Sparkles className={styles.spinIcon} />
-              </div>
-              <p>Arrived on May 27, 2026!</p>
-            </div>
-          ) : (
-            <div className={styles.timerCard}>
-              <div className={styles.countdownGrid}>
-                <div className={styles.timerUnit}>
-                  <div className={`${styles.numberBox} ${styles.tickPulse}`}>{String(days).padStart(2, "0")}</div>
-                  <span className={styles.unitLabel}>Days</span>
-                </div>
-                <span className={styles.divider}>:</span>
-                <div className={styles.timerUnit}>
-                  <div className={`${styles.numberBox} ${styles.tickPulse}`}>{String(hours).padStart(2, "0")}</div>
-                  <span className={styles.unitLabel}>Hours</span>
-                </div>
-                <span className={styles.divider}>:</span>
-                <div className={styles.timerUnit}>
-                  <div className={`${styles.numberBox} ${styles.tickPulse}`}>{String(minutes).padStart(2, "0")}</div>
-                  <span className={styles.unitLabel}>Minutes</span>
-                </div>
-                <span className={styles.divider}>:</span>
-                <div className={styles.timerUnit}>
-                  <div className={`${styles.numberBox} ${styles.tickPulse}`}>{String(seconds).padStart(2, "0")}</div>
-                  <span className={styles.unitLabel}>Seconds</span>
-                </div>
-              </div>
-            </div>
-          )}
+    <div class="countdown-container" id="countdown-board">
+        <div class="countdown-grid" id="timer-grid">
+            <div class="timer-unit"><div class="number-box" id="d-val">00</div><span class="unit-label">Days</span></div>
+            <span class="divider">:</span>
+            <div class="timer-unit"><div class="number-box" id="h-val">00</div><span class="unit-label">Hours</span></div>
+            <span class="divider">:</span>
+            <div class="timer-unit"><div class="number-box" id="m-val">00</div><span class="unit-label">Minutes</span></div>
+            <span class="divider">:</span>
+            <div class="timer-unit"><div class="number-box" id="s-val">00</div><span class="unit-label">Seconds</span></div>
         </div>
-      </main>
-
-      {/* Time Machine Debug / Sandbox Tray */}
-      <footer className={styles.timeMachineDrawer}>
-        <div className={styles.sandboxLabel}>
-          <RefreshCw size={14} className={styles.spinIcon} />
-          <span>Simulation Time Machine:</span>
+        <div class="celebration-card" id="celebration-box" style="display: none;">
+            <h2>✨ He's Here! We are Together! ✨</h2>
+            <p>Arrived on May 27, 2026!</p>
         </div>
-        <div className={styles.sandboxControls}>
-          <Button
-            variant={timeMode === "real" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setTimeMode("real")}
-          >
-            Real Time (2026 Target)
-          </Button>
-          <Button
-            variant={timeMode === "waiting_sad" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setTimeMode("waiting_sad")}
-          >
-                        Sad (30 Days Away)
-          </Button>
-          <Button
-            variant={timeMode === "waiting_happy" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setTimeMode("waiting_happy")}
-          >
-                        Happy (1 Hour Away)
-          </Button>
-          <Button
-            variant={timeMode === "flight" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setTimeMode("flight")}
-          >
-            Flight Mode (In progress)
-          </Button>
-          <Button
-            variant={timeMode === "landed" ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setTimeMode("landed")}
-          >
-            Landed (Celebration!)
-          </Button>
-        </div>
-      </footer>
     </div>
-  );
-}
+
+    <footer class="time-machine-drawer">
+        <div class="sandbox-label">🔄 Simulation Time Machine:</div>
+        <div class="sandbox-controls">
+            <button class="sandbox-btn active" onclick="switchMode('real', this)">Real Time</button>
+            <button class="sandbox-btn" onclick="switchMode('waiting_sad', this)">Sad (30 Days Away)</button>
+            <button class="sandbox-btn" onclick="switchMode('waiting_happy', this)">Happy (1 Hour Away)</button>
+            <button class="sandbox-btn" onclick="switchMode('flight', this)">Flight Mode</button>
+            <button class="sandbox-btn" onclick="switchMode('landed', this)">Landed</button>
+        </div>
+    </footer>
+
+    <script>
+        const DEPARTURE_TIME = new Date("2026-05-27T06:10:00").getTime();
+        const ARRIVAL_TIME = new Date("2026-05-27T09:00:00").getTime();
+        
+        let currentMode = "real";
+        let isMuted = true;
+        let audioCtx = null;
+
+        // Sound Engine Execution
+        document.getElementById('mute-trigger').addEventListener('click', function() {
+            isMuted = !isMuted;
+            this.textContent = isMuted ? "Muted 🔇" : "Soft Tick 🔊";
+            if (!isMuted && !audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        });
+
+        function playTick() {
+            if (isMuted || !audioCtx) return;
+            try {
+                if (audioCtx.state === "suspended") audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
+                gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } catch (e) { console.warn(e); }
+        }
+
+        function switchMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.sandbox-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateSystem();
+        }
+
+        function updateSystem() {
+            let now = new Date().getTime();
+            
+            if (currentMode === "waiting_sad") now = DEPARTURE_TIME - (28 * 24 * 60 * 60 * 1000);
+            else if (currentMode === "waiting_happy") now = DEPARTURE_TIME - (1 * 60 * 60 * 1000);
+            else if (currentMode === "flight") now = DEPARTURE_TIME + (1.5 * 60 * 60 * 1000);
+            else if (currentMode === "landed") now = ARRIVAL_TIME + 1000;
+
+            const timeToDeparture = DEPARTURE_TIME - now;
+            const timeToArrival = ARRIVAL_TIME - now;
+            const isFlightMode = now >= DEPARTURE_TIME && now < ARRIVAL_TIME;
+            const isLanded = now >= ARRIVAL_TIME;
+
+            // Happiness Calculations
+            const maxSadWindow = 30 * 24 * 60 * 60 * 1000;
+            let happiness = 1;
+            if (timeToDeparture > 0) {
+                happiness = timeToDeparture >= maxSadWindow ? 0 : 1 - (timeToDeparture / maxSadWindow);
+            }
+
+            const femaleKitty = document.getElementById('female-kitty');
+            femaleKitty.style.filter = `grayscale(${Math.max(0, 1 - happiness)}) contrast(${0.9 + happiness * 0.1}) brightness(${0.95 + happiness * 0.05})`;
+
+            // UI Layout and View Toggles
+            const statusText = document.getElementById('status-text');
+            const maleKitty = document.getElementById('male-kitty');
+            const staticPlaneBox = document.getElementById('static-plane-box');
+            const movingPlane = document.getElementById('moving-plane');
+            const reunionSpot = document.getElementById('reunion-spot');
+            const timerGrid = document.getElementById('timer-grid');
+            const celebrationBox = document.getElementById('celebration-box');
+
+            if (isLanded) {
+                statusText.textContent = "The wait is over! Together at last! 💕";
+                femaleKitty.classList.add('bouncing-kitty');
+                maleKitty.style.display = "none";
+                staticPlaneBox.style.display = "none";
+                movingPlane.style.display = "none";
+                reunionSpot.style.display = "block";
+                timerGrid.style.display = "none";
+                celebrationBox.style.display = "block";
+            } else {
+                femaleKitty.classList.remove('bouncing-kitty');
+                reunionSpot.style.display = "none";
+                timerGrid.style.display = "flex";
+                celebrationBox.style.display = "none";
+
+                if (isFlightMode) {
+                    statusText.textContent = "He is in the air right now! ✈️ Heading home...";
+                    maleKitty.style.display = "none";
+                    staticPlaneBox.style.display = "none";
+                    movingPlane.style.display = "block";
+                    
+                    // Track path updates
+                    const path = document.getElementById('flightPath');
+                    const totalLength = path.getTotalLength();
+                    const progress = (now - DEPARTURE_TIME) / (ARRIVAL_TIME - DEPARTURE_TIME);
+                    
+                    // Trace Right to Left vector calculations
+                    const pointLength = totalLength * (1 - progress);
+                    const point = path.getPointAtLength(pointLength);
+                    
+                    movingPlane.style.left = `${point.x}px`;
+                    movingPlane.style.top = `${point.y}px`;
+                    movingPlane.style.transform = "translate(-50%, -50%) scaleX(-1)";
+                } else {
+                    statusText.textContent = "Counting down to when we're together... 💕";
+                    maleKitty.style.display = "block";
+                    staticPlaneBox.style.display = "flex";
+                    movingPlane.style.display = "none";
+                }
+            }
+
+            // Core Tracker Numerical Countdown Engine
+            const totalSecondsRemaining = Math.max(0, Math.floor(timeToArrival / 1000));
+            const d = Math.floor(totalSecondsRemaining / (24 * 3600));
+            const h = Math.floor((totalSecondsRemaining % (24 * 3600)) / 3600);
+            const m = Math.floor((totalSecondsRemaining % 3600) / 60);
+            const s = totalSecondsRemaining % 60;
+
+            document.getElementById('d-val').textContent = String(d).padStart(2, "0");
+            document.getElementById('h-val').textContent = String(h).padStart(2, "0");
+            document.getElementById('m-val').textContent = String(m).padStart(2, "0");
+            document.getElementById('s-val').textContent = String(s).padStart(2, "0");
+            
+            playTick();
+        }
+
+        function buildArc() {
+            const arena = document.getElementById('arena');
+            const path = document.getElementById('flightPath');
+            const w = arena.offsetWidth;
+            const h = arena.offsetHeight;
+
+            // Generate absolute geometry vectors tracking Left and Right side dimensions
+            const startX = 140; 
+            const startY = h - 100;
+            const endX = w - 140; 
+            const endY = h - 100;
+            const controlX = w / 2;
+            const controlY = 40; 
+
+            path.setAttribute('d', `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`);
+            updateSystem();
+        }
+
+        window.addEventListener('resize', buildArc);
+        buildArc();
+        setInterval(updateSystem, 1000);
+    </script>
+</body>
+</html>
