@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -152,10 +153,11 @@
             position: absolute;
             width: 75px;
             height: 75px;
-            transform: translate(-50%, -50%);
             display: none;
             object-fit: contain;
             z-index: 5;
+            /* Explicitly define transition origin point for rotational accuracy */
+            transform-origin: center center;
         }
 
         .notepad-container {
@@ -409,7 +411,6 @@
         const DEPARTURE_TIME = new Date("2026-05-27T06:10:00").getTime();
         const ARRIVAL_TIME = new Date("2026-05-27T09:00:00").getTime();
         
-        // Change 'projectkitty_shared_note' if you want a entirely unique bucket name
         const API_URL = "https://keyv.be/projectkitty_shared_note";
         let currentMode = "real";
         let debounceTimer;
@@ -417,7 +418,6 @@
         const noteInput = document.getElementById('note-input');
         const wordCountDisplay = document.getElementById('word-count-display');
 
-        // Fetch the cloud message when any user opens the link
         async function loadCloudNote() {
             try {
                 const response = await fetch(API_URL);
@@ -433,7 +433,6 @@
             }
         }
 
-        // Save note back to the cloud using an efficient content debounce
         async function saveCloudNote(text) {
             try {
                 await fetch(API_URL, {
@@ -471,7 +470,7 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
                     saveCloudNote(noteInput.value);
-                }, 800); // Waits for typing pauses to prevent spamming server requests
+                }, 800);
             }
         }
 
@@ -537,12 +536,24 @@
                     const totalLength = path.getTotalLength();
                     const progress = (now - DEPARTURE_TIME) / (ARRIVAL_TIME - DEPARTURE_TIME);
                     
+                    // Current Position
                     const pointLength = totalLength * (1 - progress);
                     const point = path.getPointAtLength(pointLength);
                     
+                    // Position a tiny step forward to find heading direction vector
+                    const lookAheadLength = Math.max(0, pointLength - 2);
+                    const nextPoint = path.getPointAtLength(lookAheadLength);
+                    
+                    // Compute heading angle
+                    const dx = nextPoint.x - point.x;
+                    const dy = nextPoint.y - point.y;
+                    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                    
                     movingPlane.style.left = `${point.x}px`;
                     movingPlane.style.top = `${point.y}px`;
-                    movingPlane.style.transform = "translate(-50%, -50%) scaleX(-1)";
+                    
+                    // Mirror image asset cleanly horizontally (Right-to-Left) and add tangent tracking rotation
+                    movingPlane.style.transform = `translate(-50%, -50%) scaleX(-1) rotate(${-angle}deg)`;
                 } else {
                     statusText.textContent = "Counting down to when we're together... 💕";
                     maleKitty.style.display = "block";
@@ -583,9 +594,8 @@
 
         window.addEventListener('resize', buildArc);
         buildArc();
-        loadCloudNote(); // Initial cloud note lookup execution
+        loadCloudNote();
         
-        // Polls the server message state every 8 seconds to automatically update the text if the other person modifies it
         setInterval(loadCloudNote, 8000);
         setInterval(updateSystem, 1000);
     </script>
