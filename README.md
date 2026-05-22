@@ -1,6 +1,3 @@
----
-layout: null
----
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +13,16 @@ layout: null
             --flight-path-color: #B19FFB;
             --card-bg: rgba(255, 255, 255, 0.9);
             --notepad-bg: #FFFDF3;
+        }
+
+        /* Forces any theme-injected header to hide completely */
+        header, .site-header, #projectkitty-header, [class*="header"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         html, body {
