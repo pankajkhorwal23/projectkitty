@@ -400,7 +400,6 @@
         <div class="sandbox-label">🔄 Simulation Time Machine:</div>
         <div class="sandbox-controls">
             <button class="sandbox-btn active" onclick="switchMode('real', this)">Real Time</button>
-            <button class="sandbox-btn" onclick="switchMode('waiting_sad', this)">Sad (30 Days Away)</button>
             <button class="sandbox-btn" onclick="switchMode('waiting_happy', this)">Happy (1 Hour Away)</button>
             <button class="sandbox-btn" onclick="switchMode('flight', this)">Flight Mode</button>
             <button class="sandbox-btn" onclick="switchMode('landed', this)">Landed</button>
