@@ -7,6 +7,8 @@ import styles from "./_index.module.css";
 
 const DEPARTURE_TIME = new Date("2026-05-27T06:10:00");
 const ARRIVAL_TIME = new Date("2026-05-27T09:00:00");
+const SAD_WAITING_DAYS = 28;
+const MAX_SAD_WINDOW_DAYS = 30;
 
 let audioCtx: AudioContext | null = null;
 
@@ -71,7 +73,7 @@ export default function LandingPage() {
       let currentSimulatedTime = new Date();
 
       if (timeMode === "waiting_sad") {
-        currentSimulatedTime = new Date(DEPARTURE_TIME.getTime() - 28 * 24 * 60 * 60 * 1000);
+        currentSimulatedTime = new Date(DEPARTURE_TIME.getTime() - SAD_WAITING_DAYS * 24 * 60 * 60 * 1000);
       } else if (timeMode === "waiting_happy") {
         currentSimulatedTime = new Date(DEPARTURE_TIME.getTime() - 1 * 60 * 60 * 1000);
       } else if (timeMode === "flight") {
@@ -108,7 +110,7 @@ export default function LandingPage() {
   const isFlightMode = now >= DEPARTURE_TIME && now < ARRIVAL_TIME;
   const isLanded = now >= ARRIVAL_TIME;
 
-  const maxSadWindow = 30 * 24 * 60 * 60 * 1000;
+  const maxSadWindow = MAX_SAD_WINDOW_DAYS * 24 * 60 * 60 * 1000;
   let happiness = 1;
   if (timeToDeparture > 0) {
     happiness = timeToDeparture >= maxSadWindow ? 0 : 1 - timeToDeparture / maxSadWindow;
@@ -300,7 +302,7 @@ export default function LandingPage() {
             <div className={styles.celebrationCard}>
               <div className={styles.celebrationBanner}>
                 <Sparkles className={styles.spinIcon} />
-                <h2>✨ He&apos;s Here! We are Together! ✨</h2>
+                <h2>✨ He's Here! We are Together! ✨</h2>
                 <Sparkles className={styles.spinIcon} />
               </div>
               <p>Arrived on May 27, 2026!</p>
