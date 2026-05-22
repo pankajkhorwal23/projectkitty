@@ -1,0 +1,48 @@
+.appContainer { min-height: 100vh; padding: 1rem; font-family: sans-serif; background: linear-gradient(#dff3ff, #f8fbff); color: #1f2937; }
+.decorationLayer { position: fixed; inset: 0; pointer-events: none; }
+.floatingDec { position: absolute; }
+.heart { color: #ff5f93; }
+.star { color: #ffcc33; }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.titleArea { display: flex; align-items: center; gap: 0.5rem; }
+.heartPulse { font-size: 1.5rem; }
+.appTitle { margin: 0; font-size: 1.5rem; }
+.controlHeader { display: flex; align-items: center; gap: 0.5rem; }
+.muteButton { display: inline-flex; align-items: center; gap: 0.35rem; }
+.pulseBorder {}
+.audioWave {}
+.skyArena { margin-top: 1rem; display: grid; gap: 1rem; }
+.introBanner { text-align: center; }
+.introText { margin: 0; font-weight: 600; }
+.targetBadge { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.4rem; }
+.mainTrack { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: end; gap: 1rem; }
+.actorContainerLeft {}
+.kittyWrapper { text-align: center; }
+.kittyImage { max-width: 100%; height: auto; }
+.bouncingKitty {}
+.airportWrapper { text-align: center; }
+.airportImage { max-width: 100%; height: auto; }
+.arrivedGroup {}
+.kittyImageSmall { width: 90px; height: auto; }
+.wiggleCelebration {}
+.flightSvgContainer { width: 100%; }
+.flightSvg { width: 100%; height: auto; --flight-path-color: #99a3bb; }
+.airplaneFlying {}
+.actorContainerRight { text-align: center; }
+.fadeDeparted { opacity: 0.3; }
+.waitingAirplane {}
+.airplaneImageWaiting { max-width: 100%; height: auto; }
+.statusPill { display: inline-block; margin-top: 0.4rem; padding: 0.2rem 0.5rem; border-radius: 999px; background: #1f2937; color: white; font-size: 0.75rem; }
+.countdownContainer { display: flex; justify-content: center; }
+.celebrationCard, .timerCard { background: white; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); }
+.celebrationBanner { display: flex; align-items: center; gap: 0.5rem; justify-content: center; text-align: center; }
+.spinIcon {}
+.countdownGrid { display: grid; grid-template-columns: repeat(7, auto); align-items: center; gap: 0.5rem; }
+.timerUnit { text-align: center; }
+.numberBox { min-width: 52px; padding: 0.4rem; border-radius: 0.4rem; background: #e8f1ff; font-size: 1.2rem; font-weight: 700; }
+.tickPulse {}
+.unitLabel { font-size: 0.75rem; color: #6b7280; }
+.divider { font-weight: 700; }
+.timeMachineDrawer { margin-top: 1.25rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; }
+.sandboxLabel { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; margin-bottom: 0.5rem; }
+.sandboxControls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
