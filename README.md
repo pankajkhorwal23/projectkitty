@@ -158,7 +158,6 @@
             z-index: 5;
         }
 
-        /* Combined Shared Notes Layout Adjustments */
         .notepad-container {
             width: 85%;
             max-width: 400px;
@@ -182,7 +181,6 @@
             opacity: 0.8;
         }
 
-        /* The board displaying all submitted responses together */
         .notepad-display {
             width: 100%;
             height: 65px;
@@ -446,33 +444,44 @@
         const DEPARTURE_TIME = new Date("2026-05-27T06:10:00").getTime();
         const ARRIVAL_TIME = new Date("2026-05-27T09:00:00").getTime();
         
-        const API_URL = "https://keyv.be/projectkitty_shared_note_v2";
+        // Changed bucket endpoint to fully isolate corrected JSON structures
+        const API_URL = "https://keyv.be/projectkitty_stream_json";
         let currentMode = "real";
 
         const noteInput = document.getElementById('note-input');
         const streamBoard = document.getElementById('notes-stream-board');
         const wordCountDisplay = document.getElementById('word-count-display');
 
-        // Fetch cloud data and sync message tracking view
         async function loadCloudNotes() {
             try {
                 const response = await fetch(API_URL);
                 if (response.ok) {
-                    const text = await response.text();
-                    if (text && text !== "Key not found") {
-                        streamBoard.textContent = text;
-                        // Keep text scrolled to bottom layout natively
-                        streamBoard.scrollTop = streamBoard.scrollHeight;
-                    } else {
-                        streamBoard.textContent = "No messages left yet. Send a sweet note! 💕";
+                    const dataText = await response.text();
+                    if (dataText && dataText !== "Key not found") {
+                        try {
+                            const parsed = JSON.parse(dataText);
+                            if (parsed && parsed.notes) {
+                                streamBoard.textContent = parsed.notes;
+                                streamBoard.scrollTop = streamBoard.scrollHeight;
+                                return;
+                            }
+                        } catch(e) {
+                            // Backup handling if raw content slips through
+                            if(dataText.trim().length > 0) {
+                                streamBoard.textContent = dataText;
+                                return;
+                            }
+                        }
                     }
+                }
+                if (streamBoard.textContent === "Loading shared notes...") {
+                    streamBoard.textContent = "No messages left yet. Send a sweet note! 💕";
                 }
             } catch (err) {
                 console.log("Error loading cloud notes:", err);
             }
         }
 
-        // Fetch current cloud messages, append new input text, and push to cloud
         async function appendNewNote() {
             let text = noteInput.value.trim();
             if (!text) return;
@@ -483,16 +492,25 @@
                 if (response.ok) {
                     const fetchedText = await response.text();
                     if (fetchedText && fetchedText !== "Key not found") {
-                        currentCloudText = fetchedText + "\n\n";
+                        try {
+                            const parsed = JSON.parse(fetchedText);
+                            if (parsed && parsed.notes) {
+                                currentCloudText = parsed.notes + "\n\n";
+                            }
+                        } catch(e) {
+                            currentCloudText = fetchedText + "\n\n";
+                        }
                     }
                 }
 
-                // Append new message payload with clean divider lines
-                const updatedPayload = currentCloudText + `> ${text}`;
+                const updatedNotes = currentCloudText + `> ${text}`;
+                const payload = { notes: updatedNotes };
 
+                // Delivering properly formatted JSON stringifies special text characters seamlessly
                 await fetch(API_URL, {
                     method: 'POST',
-                    body: updatedPayload
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
                 noteInput.value = "";
@@ -634,7 +652,7 @@
         buildArc();
         loadCloudNotes(); 
         
-        setInterval(loadCloudNotes, 8000);
+        setInterval(loadCloudNotes, 4000); // Polling frequency optimized to 4 seconds for faster cross-device visual syncing
         setInterval(updateSystem, 1000);
     </script>
 </body>
