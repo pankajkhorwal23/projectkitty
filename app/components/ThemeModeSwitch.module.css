@@ -1,0 +1,16 @@
+.themeSwitch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #1f2937;
+}
+
+.themeSwitch:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
