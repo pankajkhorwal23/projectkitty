@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +15,6 @@
             --notepad-bg: #FFFDF3;
         }
 
-        /* Forces any backend theme-injected header to hide completely */
         header, .site-header, #projectkitty-header, [class*="header"] {
             display: none !important;
             opacity: 0 !important;
@@ -37,18 +37,15 @@
             font-family: 'Courier New', Courier, monospace;
             color: var(--text-color);
             overflow: hidden;
-            /* Uses Dynamic Viewport Height to prevent Safari mobile address bar clipping shifts */
             height: 100dvh; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            /* Protects content from slipping under the Dynamic Island or the home indicator */
             padding-top: env(safe-area-inset-top, 20px);
             padding-bottom: env(safe-area-inset-bottom, 10px);
         }
 
-        /* Main Arena scaling tailored for vertical mobile layouts */
         .sky-arena {
             position: relative;
             width: 95%;
@@ -82,7 +79,6 @@
             opacity: 0.8;
         }
 
-        /* Responsive Character Containers scaled safely for the iPhone 15 frame */
         .actor-container {
             display: flex;
             flex-direction: column;
@@ -163,7 +159,6 @@
             z-index: 5;
         }
 
-        /* Clean Mobile Notepad Container */
         .notepad-container {
             width: 85%;
             max-width: 400px;
@@ -198,7 +193,7 @@
             padding: 0;
             box-sizing: border-box;
             line-height: 1.3;
-            -webkit-appearance: none; /* Strips native iOS shadow overlays */
+            -webkit-appearance: none;
         }
 
         .word-counter {
@@ -211,7 +206,6 @@
             animation: shake 0.2s ease-in-out;
         }
 
-        /* Responsive Mobile Target Card */
         .countdown-container {
             text-align: center;
             margin-bottom: 15px;
@@ -264,7 +258,6 @@
             color: #D87093;
         }
 
-        /* Compact Time Machine Sandbox Area for Mobile */
         .time-machine-drawer {
             width: 100%;
             background: rgba(255, 255, 255, 0.85);
@@ -320,7 +313,6 @@
             75% { transform: translateX(3px); }
         }
 
-        /* Specific CSS adjustment fallback targeting desktop screen layout proportions */
         @media (min-width: 600px) {
             .sky-arena { height: 50vh; margin-top: 6vh; }
             .intro-text { font-size: 1.2rem; }
@@ -418,19 +410,47 @@
         const DEPARTURE_TIME = new Date("2026-05-27T06:10:00").getTime();
         const ARRIVAL_TIME = new Date("2026-05-27T09:00:00").getTime();
         
+        // Change 'projectkitty_shared_note' if you want a entirely unique bucket name
+        const API_URL = "https://keyv.be/projectkitty_shared_note";
         let currentMode = "real";
+        let debounceTimer;
 
         const noteInput = document.getElementById('note-input');
         const wordCountDisplay = document.getElementById('word-count-display');
 
-        if (localStorage.getItem('kitty_note')) {
-            noteInput.value = localStorage.getItem('kitty_note');
-            validateAndCountWords();
+        // Fetch the cloud message when any user opens the link
+        async function loadCloudNote() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text && text !== "Key not found") {
+                        noteInput.value = text;
+                        validateAndCountWords(false);
+                    }
+                }
+            } catch (err) {
+                console.log("Error fetching cloud note:", err);
+            }
         }
 
-        noteInput.addEventListener('input', validateAndCountWords);
+        // Save note back to the cloud using an efficient content debounce
+        async function saveCloudNote(text) {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: text
+                });
+            } catch (err) {
+                console.log("Error saving cloud note:", err);
+            }
+        }
 
-        function validateAndCountWords(e) {
+        noteInput.addEventListener('input', () => {
+            validateAndCountWords(true);
+        });
+
+        function validateAndCountWords(shouldUpload = true) {
             let text = noteInput.value;
             let words = text.trim().split(/\s+/).filter(w => w.length > 0);
             let wordCount = words.length;
@@ -447,7 +467,13 @@
             }
 
             wordCountDisplay.textContent = `${wordCount} / 50 words`;
-            localStorage.setItem('kitty_note', noteInput.value);
+            
+            if (shouldUpload) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    saveCloudNote(noteInput.value);
+                }, 800); // Waits for typing pauses to prevent spamming server requests
+            }
         }
 
         function switchMode(mode, btn) {
@@ -544,7 +570,6 @@
             const w = arena.offsetWidth;
             const h = arena.offsetHeight;
 
-            // Compute smart alignment coordinates to match mobile character widths
             const offset = window.innerWidth < 600 ? w * 0.14 : 140;
             const startX = offset; 
             const startY = h - (window.innerWidth < 600 ? 50 : 100);
@@ -559,6 +584,10 @@
 
         window.addEventListener('resize', buildArc);
         buildArc();
+        loadCloudNote(); // Initial cloud note lookup execution
+        
+        // Polls the server message state every 8 seconds to automatically update the text if the other person modifies it
+        setInterval(loadCloudNote, 8000);
         setInterval(updateSystem, 1000);
     </script>
 </body>
