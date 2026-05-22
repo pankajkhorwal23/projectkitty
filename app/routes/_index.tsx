@@ -138,6 +138,14 @@ export default function LandingPage() {
   const hours = Math.floor((totalSecondsRemaining % (24 * 3600)) / 3600);
   const minutes = Math.floor((totalSecondsRemaining % 3600) / 60);
   const seconds = totalSecondsRemaining % 60;
+  const formattedArrival = `${ARRIVAL_TIME.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  })} at ${ARRIVAL_TIME.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit"
+  })}`;
 
   return (
     <div className={styles.appContainer}>
@@ -207,7 +215,7 @@ export default function LandingPage() {
           </p>
           <div className={styles.targetBadge}>
             <Calendar size={14} />
-            <span>Target Arrival: May 27, 2026 at 9:00 AM</span>
+            <span>Target Arrival: {formattedArrival}</span>
           </div>
         </div>
 
@@ -345,7 +353,7 @@ export default function LandingPage() {
             Real Time (2026 Target)
           </Button>
           <Button variant={timeMode === "waiting_sad" ? "primary" : "outline"} size="sm" onClick={() => setTimeMode("waiting_sad")}>
-            Sad (30 Days Away)
+            Sad ({SAD_WAITING_DAYS} Days Away)
           </Button>
           <Button variant={timeMode === "waiting_happy" ? "primary" : "outline"} size="sm" onClick={() => setTimeMode("waiting_happy")}>
             Happy (1 Hour Away)
